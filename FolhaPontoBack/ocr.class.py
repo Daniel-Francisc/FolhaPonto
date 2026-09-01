@@ -9,7 +9,12 @@ class ocr:
     def __init__(self):
         self.__CAMINHO = BASE_DIR / "imgs" / "editadas"
     def buscarImagem(self):
-        imagem = list(editadas.glob("*.png"))
+        imagens = list(self.__CAMINHO.glob("*.png"))
+        for i, imagem in enumerate(imagens):
+            print(f"{i} - {imagem.name}")
+        var = int(input())
+        option = imagens[var]
+        return option
     def VerivicarImg(self):
         try:
             ocr = PaddleOCR(
@@ -20,7 +25,7 @@ class ocr:
                 engine='paddle',
                 enable_mkldnn=False,
             )
-            results = ocr.predict(str(self.__CAMINHO))
+            results = ocr.predict(str(self.__CAMINHO / self.buscarImagem()))
             for res in results:
                 textos = res["rec_texts"]
                 confiancas = res["rec_scores"]

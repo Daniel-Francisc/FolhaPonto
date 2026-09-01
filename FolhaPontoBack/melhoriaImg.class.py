@@ -2,9 +2,9 @@ import cv2
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-__CAMINHO = BASE_DIR / "imgs" /"teste.png"
+__CAMINHO = BASE_DIR / "imgs" / "originais"
 __IMAGEM = cv2.imread(str(__CAMINHO))
-print(__IMAGEM.shape)
+# print(__IMAGEM.shape)
 
 class Img:
     def __init__(self):
@@ -16,10 +16,20 @@ class Img:
         self.ab = [0, 0]
         self.x = 0
 
+    def buscarImagem(self):
+        imagens = list(self.__CAMINHO.glob("*.png"))
+        print("Manda a imagem patrão")
+        for i, imagem in enumerate(imagens):
+            print(f"{i} - {imagem.name}")
+        var = int(input())
+        option = imagens[var]
+        return option
+    
     def __caminha(self):
-        return BASE_DIR / "imgs" / "teste.png"
+        return BASE_DIR / "imgs" / "originais"
+
     def __carregadorImagem(self):
-        return cv2.imread(str(self.__CAMINHO))
+        return cv2.imread(str(self.__CAMINHO / self.buscarImagem()))
     
     def img(self):
         self.x = str(input("1 - Ampliar a imagem \n2 - alterar o brilho/contraste \n3 - alterar a cor da imagem \n"))
@@ -72,9 +82,9 @@ class Img:
     def execute(self):
         self.img()
         if self.xy != 0:
-            self.__arquivo += f"_x{int(self.xy)}"
+            self.__arquivo += f"_x{float(self.xy)}"
         if self.ab[0]!=0 or self.ab[1] !=0 :
-            self.__arquivo += f"_ab{int(self.ab[0])}_{int(self.ab[1])}"
+            self.__arquivo += f"_ab{float(self.ab[0])}_{float(self.ab[1])}"
         if self.cor != "colorado":
             self.__arquivo += f"_{self.cor}"
 
