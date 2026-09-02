@@ -53,3 +53,4 @@ class ocr:
 
 obj = ocr()
 print(obj.VerivicarImg())
+# A folha é assinada, scaneada e 

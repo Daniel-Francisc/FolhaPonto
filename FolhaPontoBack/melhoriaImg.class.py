@@ -2,14 +2,15 @@ import cv2
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-__CAMINHO = BASE_DIR / "imgs" / "originais"
-__IMAGEM = cv2.imread(str(__CAMINHO))
+# __CAMINHO = BASE_DIR / "imgs" / "originais"
+# __IMAGEM = cv2.imread(str(__CAMINHO))
 # print(__IMAGEM.shape)
 
 class Img:
     def __init__(self):
         self.__CAMINHO = self.__caminha()
         self.obj = self.__carregadorImagem()
+        # self.nome = ""
         self.__arquivo = "teste"
         self.cor = "colorado"
         self.xy = 0
@@ -23,6 +24,7 @@ class Img:
             print(f"{i} - {imagem.name}")
         var = int(input())
         option = imagens[var]
+        self.__arquivo = str(option)
         return option
     
     def __caminha(self):
