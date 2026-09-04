@@ -12,6 +12,30 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <section class="login-view hidden" id="loginView" aria-labelledby="loginTitle">
+      <div class="login-intro">
+        <div class="login-brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <p class="eyebrow">UnDF · DIGEP</p>
+        <h1 id="loginTitle">Ponto Digital<br />DIGEP</h1>
+        <p>Gestão inteligente, segura e organizada de folhas de ponto.</p>
+        <div class="login-intro-note"><span class="status-dot"></span><span>Ambiente de demonstração acadêmica</span></div>
+      </div>
+      <div class="login-form-panel">
+        <div class="login-form-wrap">
+          <p class="eyebrow">Acesso ao sistema</p>
+          <h2>Bem-vindo de volta</h2>
+          <p class="login-description">Entre com seu usuário para acompanhar o processamento das folhas.</p>
+          <form id="loginForm">
+            <label>Usuário ou e-mail<input id="loginUser" type="text" autocomplete="username" placeholder="Digite seu usuário" required /></label>
+            <label>Senha<div class="password-field"><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Digite sua senha" required /><button id="togglePassword" type="button" aria-label="Mostrar senha">Mostrar</button></div></label>
+            <div class="login-options"><label class="remember-option"><input type="checkbox" checked /> Lembrar acesso</label><button class="link-button" type="button">Esqueci minha senha</button></div>
+            <p class="login-error hidden" id="loginError" role="alert">Informe usuário e senha para continuar.</p>
+            <button class="primary-button login-submit" type="submit">Entrar <span>→</span></button>
+          </form>
+          <p class="login-academic-credit">Projeto acadêmico desenvolvido na disciplina Estágio Empresarial I – Engenharia de Software – UnDF – 2026.2.</p>
+        </div>
+      </div>
+    </section>
     <div class="app-shell">
       <aside class="sidebar" id="sidebar">
         <div class="brand">
@@ -19,7 +43,7 @@
             <span></span><span></span><span></span>
           </div>
           <div>
-            <strong>Ponto Digital</strong>
+            <strong>Ponto Digital DIGEP</strong>
             <small>DIGEP · UnDF</small>
           </div>
         </div>
@@ -41,6 +65,9 @@
           <button class="nav-item" data-view="arquivo" type="button">
             <span class="nav-icon">▱</span><span>Arquivo de folhas</span>
           </button>
+          <button class="nav-item" data-view="novo-lote" type="button">
+            <span class="nav-icon">＋</span><span>Novo lote</span>
+          </button>
         </nav>
 
         <nav class="nav-section" aria-label="Gestão">
@@ -55,11 +82,23 @@
           <button class="nav-item" data-view="auditoria" type="button">
             <span class="nav-icon">◷</span><span>Auditoria</span>
           </button>
+          <button class="nav-item" data-view="historico" type="button">
+            <span class="nav-icon">↺</span><span>Histórico</span>
+          </button>
+          <button class="nav-item" data-view="usuarios" type="button">
+            <span class="nav-icon">♙</span><span>Usuários</span>
+          </button>
         </nav>
 
         <div class="sidebar-bottom">
           <button class="nav-item" data-view="configuracoes" type="button">
             <span class="nav-icon">⚙</span><span>Configurações</span>
+          </button>
+          <button class="nav-item" id="aboutButton" type="button">
+            <span class="nav-icon">ⓘ</span><span>Sobre o projeto</span>
+          </button>
+          <button class="nav-item" id="logoutButton" type="button">
+            <span class="nav-icon">↪</span><span>Sair</span>
           </button>
           <div class="sidebar-user">
             <div class="avatar avatar-small">MS</div>
@@ -103,11 +142,11 @@
             <div class="page-heading">
               <div>
                 <p class="eyebrow">Sexta-feira, 04 de setembro de 2026</p>
-                <h1>Olá, Marina.</h1>
-                <p class="heading-support">Acompanhe o processamento das folhas de ponto da competência selecionada.</p>
+                <h1>Gestão de Folhas de Ponto</h1>
+                <p class="heading-support">Acompanhe o recebimento, a conferência e o arquivamento da competência selecionada.</p>
               </div>
               <button class="primary-button" id="newBatchButton" type="button">
-                <span class="button-plus">＋</span> Novo lote
+                <span class="button-plus">＋</span> Novo processamento
               </button>
             </div>
 
@@ -257,8 +296,26 @@
           <section class="view placeholder-view hidden" id="placeholderView">
             <div class="empty-state panel"><div class="empty-state-icon">◌</div><p class="eyebrow">Módulo em preparação</p><h1 id="placeholderTitle">Arquivo de folhas</h1><p>Esta área fará parte da próxima etapa do MVP. A navegação já está estruturada para receber o fluxo completo.</p><button class="secondary-button" data-view-target="dashboard" type="button">Voltar ao dashboard</button></div>
           </section>
+          <footer class="system-footer">Ponto Digital DIGEP <span>•</span> Estágio Empresarial I <span>•</span> UnDF <span>•</span> 2026.2</footer>
         </div>
       </main>
+    </div>
+    <div class="about-modal hidden" id="aboutModal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+      <div class="about-card">
+        <button class="about-close" id="aboutClose" aria-label="Fechar" type="button">×</button>
+        <div class="about-mark">PD</div>
+        <p class="eyebrow">Sobre o projeto</p>
+        <h2 id="aboutTitle">Ponto Digital DIGEP</h2>
+        <p class="about-subtitle">Sistema de Gestão de Folhas de Ponto</p>
+        <p>Projeto acadêmico desenvolvido durante o período letivo 2026.2, na disciplina Estágio Empresarial I do curso de Engenharia de Software da Universidade do Distrito Federal Professor Jorge Amaury Maia Nunes – UnDF.</p>
+        <div class="credit-block">
+          <strong>Desenvolvimento do sistema</strong>
+          <span>Jasmine de Sá Araujo</span>
+          <strong>Identidade visual</strong>
+          <span>Francisco Daniel Bento dos Santos</span>
+          <span>Estevão Souza Araújo</span>
+        </div>
+      </div>
     </div>
     <input type="file" id="batchFileInput" accept=".pdf,.png,.jpg,.jpeg" hidden />
     <div class="toast" id="toast" role="status"><span class="toast-icon">✓</span><span id="toastMessage">Ação concluída.</span></div>

@@ -4,6 +4,16 @@ MVP funcional do sistema institucional da DIGEP/UnDF para recebimento,
 conferência e arquivamento de folhas de ponto. A interface visual foi preservada
 e agora conversa com uma API Python local.
 
+## Informações acadêmicas
+
+- Disciplina: Estágio Empresarial I
+- Período letivo: 2026.2
+- Curso: Engenharia de Software
+- Instituição: Universidade do Distrito Federal Professor Jorge Amaury Maia Nunes – UnDF
+- Sistema: Ponto Digital DIGEP
+- Desenvolvimento do sistema: Jasmine de Sá Araujo
+- Identidade visual: Francisco Daniel Bento dos Santos e Estevão Souza Araújo
+
 ## Executar no Replit
 
 O workflow do Replit inicia uma API FastAPI na porta 5000:
@@ -18,6 +28,9 @@ Também é possível iniciar diretamente com:
 ```bash
 python3 main.py
 ```
+
+A tela de login demonstrativa pode ser aberta em `/?view=login`. O modal
+“Sobre o projeto”, no menu lateral, apresenta os créditos acadêmicos completos.
 
 ## O que está nesta primeira versão
 

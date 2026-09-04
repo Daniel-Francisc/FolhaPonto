@@ -5,7 +5,11 @@ const viewNames = {
   servidores: "Servidores",
   envios: "Fila de envios",
   auditoria: "Auditoria",
+  historico: "Histórico",
+  usuarios: "Usuários",
+  "novo-lote": "Novo lote",
   configuracoes: "Configurações",
+  login: "Acesso ao sistema",
 };
 
 let queueData = [];
@@ -33,6 +37,10 @@ function showToast(message, error = false) {
 }
 
 function showView(view) {
+  const isLogin = view === "login";
+  $(".app-shell").classList.toggle("hidden", isLogin);
+  $("#loginView").classList.toggle("hidden", !isLogin);
+  if (isLogin) return;
   $("#dashboardView").classList.toggle("hidden", view !== "dashboard");
   $("#ocrView").classList.toggle("hidden", view !== "ocr");
   $("#placeholderView").classList.toggle("hidden", view === "dashboard" || view === "ocr");
@@ -221,6 +229,30 @@ $("#competencySelect").addEventListener("change", async (event) => {
   await Promise.all([loadDashboard(), loadQueue()]);
 });
 $("#ocrForm").addEventListener("submit", (event) => event.preventDefault());
+$("#aboutButton").addEventListener("click", () => $("#aboutModal").classList.remove("hidden"));
+$("#aboutClose").addEventListener("click", () => $("#aboutModal").classList.add("hidden"));
+$("#aboutModal").addEventListener("click", (event) => {
+  if (event.target.id === "aboutModal") $("#aboutModal").classList.add("hidden");
+});
+$("#logoutButton").addEventListener("click", () => showView("login"));
+$("#togglePassword").addEventListener("click", () => {
+  const password = $("#loginPassword");
+  const visible = password.type === "text";
+  password.type = visible ? "password" : "text";
+  $("#togglePassword").textContent = visible ? "Mostrar" : "Ocultar";
+});
+$("#loginForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const user = $("#loginUser").value.trim();
+  const password = $("#loginPassword").value.trim();
+  if (!user || !password) {
+    $("#loginError").classList.remove("hidden");
+    return;
+  }
+  $("#loginError").classList.add("hidden");
+  showView("dashboard");
+  showToast("Acesso demonstrativo realizado.");
+});
 
 document.addEventListener("keydown", (event) => {
   if ($("#ocrView").classList.contains("hidden")) return;
