@@ -1,0 +1,51 @@
+Atualize as informações acadêmicas e os créditos do projeto sem remover nenhuma funcionalidade existente.
+
+DADOS OFICIAIS DO PROJETO
+
+* Disciplina: Estágio Empresarial I
+* Período letivo: 2026.2
+* Curso: Engenharia de Software
+* Instituição: Universidade do Distrito Federal Professor Jorge Amaury Maia Nunes – UnDF
+* Sistema: Ponto Digital DIGEP
+* Identidade visual desenvolvida por:
+
+  * Francisco Daniel Bento dos Santos
+  * Estevão Souza Araújo
+
+APLICAÇÃO DOS CRÉDITOS
+
+1. No rodapé da tela de login, inserir:
+
+“Projeto acadêmico desenvolvido na disciplina Estágio Empresarial I – Engenharia de Software – UnDF – 2026.2.”
+
+2. Abaixo ou na página “Sobre o projeto”, inserir:
+
+“Identidade visual: Francisco Daniel Bento dos Santos e Estevão Souza Araújo.”
+
+3. Criar uma página ou modal “Sobre o projeto” contendo:
+
+Ponto Digital DIGEP
+Sistema de Gestão de Folhas de Ponto
+
+Projeto acadêmico desenvolvido durante o período letivo 2026.2, na disciplina Estágio Empresarial I do curso de Engenharia de Software da Universidade do Distrito Federal Professor Jorge Amaury Maia Nunes – UnDF.
+
+Identidade visual:
+
+* Francisco Daniel Bento dos Santos
+* Estevão Souza Araújo
+
+4. No rodapé geral do sistema, utilizar uma versão curta:
+
+“Ponto Digital DIGEP • Estágio Empresarial I • UnDF • 2026.2”
+
+5. Os nomes dos responsáveis pela identidade visual devem aparecer completos, escritos corretamente e com o mesmo destaque.
+
+6. Não exibir os links internos do AVA no sistema, pois são páginas acadêmicas de acesso restrito. Utilize apenas os nomes completos.
+
+7. Não atribua aos responsáveis pela identidade visual a autoria do código, do backend, do OCR ou do sistema completo. O crédito deve aparecer especificamente como “Identidade visual”.
+
+8. Não invente nomes de outros integrantes, professor orientador ou responsáveis técnicos. Esses dados serão adicionados posteriormente.
+
+9. Preserve a identidade azul e verde minimalista da referência fornecida.
+
+10. Não altere o banco de dados, as regras de negócio, a autenticação ou o processamento de OCR durante essa atualização.
