@@ -80,7 +80,7 @@ class Img:
             case '4':
                 try:
                     obj = []
-                    kernel = np.ones((5,5), np.uint8)
+                    # kernel = np.ones((5,5), np.uint8)
                     cinzado = cv2.cvtColor(self.obj, cv2.COLOR_BGR2GRAY)
 
                     imagem_desfocada = cv2.blur(cinzado,(3,3))
