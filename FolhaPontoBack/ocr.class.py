@@ -8,6 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent
 class ocr:
     def __init__(self):
         self.__CAMINHO = BASE_DIR / "imgs" / "editadas"
+
     def buscarImagem(self):
         imagens = list(self.__CAMINHO.glob("*.png"))
         for i, imagem in enumerate(imagens):
@@ -15,6 +16,7 @@ class ocr:
         var = int(input())
         option = imagens[var]
         return option
+
     def VerivicarImg(self):
         try:
             ocr = PaddleOCR(

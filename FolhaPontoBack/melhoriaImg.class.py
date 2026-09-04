@@ -1,10 +1,8 @@
 import cv2
+import numpy as np
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-# __CAMINHO = BASE_DIR / "imgs" / "originais"
-# __IMAGEM = cv2.imread(str(__CAMINHO))
-# print(__IMAGEM.shape)
 
 class Img:
     def __init__(self):
@@ -34,7 +32,8 @@ class Img:
         return cv2.imread(str(self.__CAMINHO / self.buscarImagem()))
     
     def img(self):
-        self.x = str(input("1 - Ampliar a imagem \n2 - alterar o brilho/contraste \n3 - alterar a cor da imagem \n"))
+        self.x = str(input("1 - Ampliar a imagem \n2 - alterar o brilho/contraste \n3 - alterar a cor da imagem \n" \
+        "5 - limiarizar"))
         match self.x:
             case '1':
                 try:
@@ -71,9 +70,57 @@ class Img:
             case '3':
                 try:
                     self.cor = "descolorado"
-                    imagem_cor = cv2.cvtColor(obj, cv2.COLOR_BGR2GRAY)
+                    imagem_cor = cv2.cvtColor(self.obj, cv2.COLOR_BGR2GRAY)
                     self.obj = imagem_cor
                     print("Colorado")
+                except Exception as erro:
+                    print(erro)
+                finally: 
+                    self.img()
+            case '4':
+                try:
+                    obj = []
+                    kernel = np.ones((5,5), np.uint8)
+                    cinzado = cv2.cvtColor(self.obj, cv2.COLOR_BGR2GRAY)
+
+                    imagem_desfocada = cv2.blur(cinzado,(3,3))
+                    obj.append(imagem_desfocada)
+# 
+                    imagem_desfocada_gaussiana = cv2.GaussianBlur(cinzado,(3,3),0)
+                    obj.append(imagem_desfocada_gaussiana)
+
+                    # imagem_coisada_dentro = cv2.morphologyEx(cinzado, cv2.MORPH_CLOSE, kernel)
+                    # obj.append(imagem_coisada_dentro)
+                    
+                    # imagem_coisada_fora = cv2.morphologyEx (imagem_coisada_dentro, cv2.MORPH_OPEN, kernel)
+                    # obj.append(imagem_coisada_fora)
+
+                    for i,imagem in enumerate(obj):
+                        caminho_saida = BASE_DIR / "imgs" / "editadas" / f"{self.__arquivo}_coisado_{i}.png"
+                        cv2.imwrite(str(caminho_saida), imagem)
+
+                    # self.obj = imagem_coisada_fora
+                except Exception as erro:
+                    print(erro)
+                # finally: 
+                #     self.img()
+            case '5':
+                try:
+                    obj = []
+
+                    _, imagem_limiarisada = cv2.threshold(cv2.cvtColor(self.obj, cv2.COLOR_BGR2GRAY),0,255,cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                    obj.append(imagem_limiarisada)
+
+                    # imagem_limiarisada_coisada = cv2.adaptiveThreshold(cv2.cvtColor(self.obj, cv2.COLOR_BGR2GRAY),255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,11,0)
+                    # obj.append(imagem_limiarisada_coisada)
+
+                    # imagem_limiarisada_coisada_gausiana = cv2.adaptiveThreshold(cv2.cvtColor(self.obj, cv2.COLOR_BGR2GRAY),255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,0)
+                    # obj.append(imagem_limiarisada_coisada_gausiana)
+
+                    # for i,imagem in enumerate(obj):
+                    #     caminho_saida = BASE_DIR / "imgs" / "editadas" / f"{self.__arquivo}_limiarisada_{i}.png"
+                    #     cv2.imwrite(str(caminho_saida), imagem)
+
                 except Exception as erro:
                     print(erro)
                 finally: 
