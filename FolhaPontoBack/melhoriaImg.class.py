@@ -127,7 +127,7 @@ class Img:
                     self.img()
             case _:
                 print("Passou nada paizão!")
-git push origin main
+
     def execute(self):
         self.img()
         if self.xy != 0:
