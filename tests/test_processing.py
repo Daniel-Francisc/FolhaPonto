@@ -19,7 +19,7 @@ class ProcessingTests(unittest.TestCase):
     def test_low_confidence_is_explicit_when_no_text_is_found(self):
         result = extract_fields("")
         self.assertIsNone(result.matricula)
-        self.assertEqual(result.modo, "demo")
+        self.assertEqual(result.modo, "ocr-indisponivel")
         self.assertLess(result.confianca, 0.7)
 
 

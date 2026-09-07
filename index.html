@@ -153,7 +153,7 @@
 
             <div class="demo-notice">
               <div class="notice-icon">i</div>
-              <div><strong>Modo demonstração ativo</strong><span>Os dados exibidos são fictícios. O OCR e o envio de e-mails serão simulados nesta etapa.</span></div>
+              <div><strong>Processamento real ativo</strong><span>Cada página enviada é separada e registrada. Quando nenhum OCR estiver disponível, o sistema informa isso sem preencher dados fictícios.</span></div>
               <button aria-label="Fechar aviso" class="notice-close" type="button">×</button>
             </div>
 
@@ -186,28 +186,23 @@
                   <div><h2>Processamento da competência</h2><p>Progresso geral das folhas recebidas</p></div>
                   <button class="ghost-button" type="button" data-view-target="ocr">Ver conferência <span>→</span></button>
                 </div>
-                <div class="progress-summary"><strong>75%</strong><span>186 de 248 folhas reconhecidas automaticamente</span></div>
-                <div class="progress-track large"><span style="width: 75%"></span></div>
+                <div class="progress-summary"><strong>0%</strong><span>0 de 0 folhas reconhecidas automaticamente</span></div>
+                <div class="progress-track large"><span style="width: 0%"></span></div>
                 <div class="legend-grid">
-                  <div><span class="legend-dot blue"></span><strong>186</strong><span>Reconhecidas</span></div>
-                  <div><span class="legend-dot yellow"></span><strong>42</strong><span>Em conferência</span></div>
-                  <div><span class="legend-dot red"></span><strong>20</strong><span>Baixa confiança</span></div>
+                  <div><span class="legend-dot blue"></span><strong>0</strong><span>Reconhecidas</span></div>
+                  <div><span class="legend-dot yellow"></span><strong>0</strong><span>Em conferência</span></div>
+                  <div><span class="legend-dot red"></span><strong>0</strong><span>Baixa confiança</span></div>
                 </div>
                 <div class="processing-divider"></div>
                 <div class="mini-stat-row">
-                  <div><span class="mini-stat-icon">◷</span><div><strong>1m 42s</strong><span>Tempo médio de processamento</span></div></div>
-                  <div><span class="mini-stat-icon archive">▤</span><div><strong>164</strong><span>Folhas arquivadas</span></div></div>
+                  <div><span class="mini-stat-icon">◷</span><div><strong>—</strong><span>Tempo médio de processamento</span></div></div>
+                  <div><span class="mini-stat-icon archive">▤</span><div><strong>0</strong><span>Folhas arquivadas</span></div></div>
                 </div>
               </article>
 
               <article class="panel activity-panel">
                 <div class="panel-heading"><div><h2>Atividade recente</h2><p>Últimas ações registradas no sistema</p></div><button class="more-button" aria-label="Mais opções" type="button">···</button></div>
-                <div class="activity-list">
-                  <div class="activity-item"><span class="activity-bullet blue"></span><div><strong>Novo lote processado</strong><span>Lote JUL-2026-004 · 36 folhas</span></div><time>há 8 min</time></div>
-                  <div class="activity-item"><span class="activity-bullet green"></span><div><strong>Folha arquivada</strong><span>Alexandre Nata Vicente · 17289106</span></div><time>há 21 min</time></div>
-                  <div class="activity-item"><span class="activity-bullet yellow"></span><div><strong>Conferência pendente</strong><span>4 folhas aguardam revisão manual</span></div><time>há 35 min</time></div>
-                  <div class="activity-item"><span class="activity-bullet purple"></span><div><strong>Planilha atualizada</strong><span>248 servidores importados</span></div><time>há 1 h</time></div>
-                </div>
+                 <div class="activity-list" id="activityList"><div class="empty-inline">Nenhuma atividade registrada nesta competência.</div></div>
                 <button class="text-button" data-view-target="auditoria" type="button">Ver histórico completo <span>→</span></button>
               </article>
             </div>
@@ -218,18 +213,14 @@
                 <div class="table-wrap">
                   <table>
                     <thead><tr><th>Servidor</th><th>Matrícula</th><th>Confiança OCR</th><th>Situação</th><th></th></tr></thead>
-                    <tbody>
-                      <tr><td><div class="person-cell"><div class="avatar avatar-table purple-bg">AR</div><strong>Ana Ribeiro</strong></div></td><td class="muted-cell">16234018</td><td><div class="confidence"><span class="confidence-bar"><i style="width: 62%"></i></span><strong>62%</strong></div></td><td><span class="status-pill status-red">Baixa confiança</span></td><td><button class="row-action" data-view-target="ocr" type="button">Conferir</button></td></tr>
-                      <tr><td><div class="person-cell"><div class="avatar avatar-table orange-bg">CF</div><strong>Caio Ferreira</strong></div></td><td class="muted-cell">17450291</td><td><div class="confidence"><span class="confidence-bar"><i class="yellow-bar" style="width: 78%"></i></span><strong>78%</strong></div></td><td><span class="status-pill status-yellow">Revisão necessária</span></td><td><button class="row-action" data-view-target="ocr" type="button">Conferir</button></td></tr>
-                      <tr><td><div class="person-cell"><div class="avatar avatar-table teal-bg">JM</div><strong>João Martins</strong></div></td><td class="muted-cell">16871904</td><td><div class="confidence"><span class="confidence-bar"><i class="yellow-bar" style="width: 84%"></i></span><strong>84%</strong></div></td><td><span class="status-pill status-yellow">Revisão necessária</span></td><td><button class="row-action" data-view-target="ocr" type="button">Conferir</button></td></tr>
-                    </tbody>
+                     <tbody id="attentionRows"><tr><td colspan="5"><div class="empty-inline">Nenhuma folha precisa de atenção nesta competência.</div></td></tr></tbody>
                   </table>
                 </div>
                 <button class="text-button table-footer" data-view-target="ocr" type="button">Ver todas as pendências <span>→</span></button>
               </article>
               <article class="panel dispatch-panel">
                 <div class="panel-heading"><div><h2>Fila de envios</h2><p>Folhas de servidores que acumulam cargo</p></div><span class="small-badge">07 pendentes</span></div>
-                <div class="dispatch-visual"><div class="dispatch-donut"><strong>14</strong><span>folhas</span></div><div class="dispatch-copy"><div><span class="legend-dot green"></span><strong>07</strong><span>Enviadas</span></div><div><span class="legend-dot yellow"></span><strong>07</strong><span>Pendentes</span></div></div></div>
+                 <div class="dispatch-visual"><div class="dispatch-donut"><strong>0</strong><span>folhas</span></div><div class="dispatch-copy"><div><span class="legend-dot green"></span><strong>0</strong><span>Enviadas</span></div><div><span class="legend-dot yellow"></span><strong>0</strong><span>Pendentes</span></div></div></div>
                 <button class="secondary-button full-button" data-view-target="envios" type="button">Acessar fila de envios <span>→</span></button>
               </article>
             </div>
@@ -295,7 +286,18 @@
           </section>
 
           <section class="view placeholder-view hidden" id="placeholderView">
-            <div class="empty-state panel"><div class="empty-state-icon">◌</div><p class="eyebrow">Módulo em preparação</p><h1 id="placeholderTitle">Arquivo de folhas</h1><p>Esta área fará parte da próxima etapa do MVP. A navegação já está estruturada para receber o fluxo completo.</p><button class="secondary-button" data-view-target="dashboard" type="button">Voltar ao dashboard</button></div>
+            <div class="empty-state panel" id="moduleEmpty"><div class="empty-state-icon">◌</div><p class="eyebrow">Módulo em preparação</p><h1 id="placeholderTitle">Arquivo de folhas</h1><p>Esta área fará parte da próxima etapa do MVP.</p><button class="secondary-button" data-view-target="dashboard" type="button">Voltar ao dashboard</button></div>
+            <div class="module-panel hidden" id="employeeImportPanel">
+              <div class="page-heading compact-heading"><div><p class="eyebrow">Gestão · Servidores</p><h1>Importar servidores</h1><p class="heading-support">Envie CSV ou XLSX, valide as linhas e confirme inclusão ou atualização.</p></div><button class="secondary-button" data-view-target="dashboard" type="button">← Dashboard</button></div>
+              <div class="panel import-card">
+                <form id="employeeImportForm" class="import-form"><label>Planilha de servidores<input id="employeeImportFile" type="file" accept=".csv,.xlsx" required /><span>Colunas: Nome, Matrícula, CPF, E-mail, Carga Horária e Acumula cargo (Sim/Não).</span></label><button class="primary-button" type="submit">Validar planilha</button></form>
+                <div class="import-result hidden" id="employeeImportResult"><div class="import-summary" id="employeeImportSummary"></div><div class="import-errors" id="employeeImportErrors"></div><button class="primary-button hidden" id="confirmEmployeeImport" type="button">Confirmar linhas válidas</button></div>
+              </div>
+            </div>
+            <div class="module-panel hidden" id="newBatchPanel">
+              <div class="page-heading compact-heading"><div><p class="eyebrow">Processamento · Novo lote</p><h1>Receber folhas de ponto</h1><p class="heading-support">O PDF será separado por página e cada folha terá seu próprio resultado.</p></div><button class="secondary-button" data-view-target="dashboard" type="button">← Dashboard</button></div>
+              <div class="panel batch-drop-card"><div class="batch-drop-icon">↑</div><h2>Envie o arquivo do lote</h2><p>PDF, PNG ou JPG até 20 MB. O arquivo original permanece em armazenamento privado.</p><button class="primary-button" id="newBatchModuleButton" type="button">Selecionar arquivo</button><p class="batch-note">Sem OCR instalado, cada página ficará marcada como “OCR indisponível” para conferência manual.</p></div>
+            </div>
           </section>
           <div class="academic-credit-strip">
             <div class="academic-credit-title"><span class="about-mark-small">PD</span><div><strong>Projeto acadêmico · 2026.2</strong><span>Estágio Empresarial I · Engenharia de Software · UnDF</span></div></div>
