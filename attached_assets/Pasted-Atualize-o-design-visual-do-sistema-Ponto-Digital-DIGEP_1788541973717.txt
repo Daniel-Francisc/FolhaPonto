@@ -1,0 +1,301 @@
+Atualize o design visual do sistema “Ponto Digital DIGEP” utilizando como referência a imagem anexada chamada “Site Azul e Verde de Clínica de Psicologia Estilo Minimalista”.
+
+IMPORTANTE:
+
+A imagem é somente uma referência visual.
+Não copie textos, fotografias, símbolos ou elementos relacionados à psicologia.
+Não transforme o sistema em um site institucional comum ou página de clínica.
+Preserve todas as funcionalidades já implementadas.
+Não altere banco de dados, API, regras de OCR ou autenticação sem necessidade.
+Antes das mudanças, verifique o estado atual do projeto e não apague funcionalidades existentes.
+
+DIREÇÃO VISUAL
+
+Adote uma identidade:
+
+minimalista;
+moderna;
+acolhedora;
+institucional;
+organizada;
+profissional;
+acessível;
+compatível com um projeto de Engenharia de Software do 5º semestre.
+
+Utilize o estilo azul e verde da referência, adaptando-o para um sistema administrativo da DIGEP/UnDF.
+
+PALETA DE CORES
+
+Utilize aproximadamente:
+
+azul principal: #8EB3C4;
+azul escuro: #315D6B;
+verde principal: #8DC5B0;
+verde escuro: #397763;
+fundo claro: #F5F8F7;
+branco: #FFFFFF;
+texto principal: #172321;
+texto secundário: #536562;
+sucesso: #2E8B68;
+alerta: #C88A24;
+erro: #C94B4B.
+
+Garanta contraste adequado e legibilidade.
+
+TIPOGRAFIA
+
+A referência utiliza fontes decorativas, mas o sistema precisa ser legível.
+
+Utilize:
+
+Inter, Manrope ou DM Sans para títulos, menus, tabelas, campos e textos;
+títulos grandes e elegantes;
+pesos 500, 600 e 700;
+boa separação entre título, descrição e conteúdo.
+
+Não utilize fonte cursiva ou excessivamente decorativa nos menus, números, tabelas, formulários e informações do OCR.
+
+Se desejar reproduzir discretamente o estilo da referência, use uma fonte mais elegante somente no nome “Ponto Digital”, sem prejudicar a leitura.
+
+ESTRUTURA DO SISTEMA
+
+Crie um layout de aplicação administrativa com:
+
+menu lateral fixo;
+logotipo ou símbolo simples;
+nome “Ponto Digital DIGEP”;
+cabeçalho com usuário conectado;
+seletor de competência;
+área principal clara;
+cartões com cantos levemente arredondados;
+sombras discretas;
+bastante espaço em branco;
+blocos alternados em azul claro, verde claro e branco;
+design responsivo para computador, tablet e celular.
+
+Não utilize grandes fotografias decorativas. Priorize:
+
+ícones;
+gráficos;
+indicadores;
+tabelas;
+visualização de documentos;
+informações do processamento.
+
+MENU LATERAL
+
+Inclua:
+
+Dashboard
+Servidores
+Importar servidores
+Novo lote
+Conferência
+Arquivo de folhas
+Fila de envio
+Histórico
+Auditoria
+Usuários
+Configurações
+Sair
+
+DASHBOARD
+
+O Dashboard deve seguir a composição modular e espaçada da referência.
+
+No topo, exiba:
+
+título “Gestão de Folhas de Ponto”;
+descrição curta;
+competência selecionada;
+botão “Novo processamento”.
+
+Crie cartões para:
+
+folhas recebidas;
+processadas;
+aguardando conferência;
+baixa confiança;
+arquivadas;
+envios pendentes;
+envios concluídos;
+erros de envio.
+
+Destaque os números e use cores de status com moderação.
+
+Inclua:
+
+gráfico do processamento mensal;
+lista de atividades recentes;
+painel de pendências;
+progresso do lote atual;
+atalhos para importar servidores e processar documentos.
+
+TELA DE NOVO LOTE
+
+Crie uma área de upload elegante e clara, com:
+
+arrastar e soltar;
+seleção de PDF, PNG ou JPG;
+lista dos arquivos selecionados;
+tamanho dos arquivos;
+indicação de formato;
+botão “Iniciar processamento”;
+barra de progresso;
+mensagens de erro;
+explicação de que o PDF pode conter várias folhas.
+
+TELA DE CONFERÊNCIA DO OCR
+
+Essa é a tela mais importante do sistema.
+
+Utilize duas colunas:
+
+Lado esquerdo:
+
+visualização ampliada da folha;
+zoom;
+rotação;
+troca de página;
+download do original.
+
+Lado direito:
+
+matrícula reconhecida;
+nome do servidor;
+competência;
+cargo;
+carga horária;
+unidade de exercício;
+confiança do OCR em cada campo;
+servidor correspondente;
+observações.
+
+Inclua botões:
+
+Confirmar e arquivar;
+Corrigir dados;
+Encaminhar para pendência;
+Rejeitar processamento;
+Próxima folha.
+
+Use indicadores:
+
+verde para alta confiança;
+amarelo para revisão;
+vermelho para baixa confiança ou divergência.
+
+LISTAGENS E TABELAS
+
+As páginas de servidores, folhas, envios e auditoria devem ter:
+
+campo de busca;
+filtros;
+paginação;
+ordenação;
+cabeçalhos bem destacados;
+linhas com boa altura;
+status em etiquetas coloridas;
+menu de ações;
+estado vazio;
+mensagem de carregamento;
+feedback quando ocorrer erro.
+
+Não utilize tabelas visualmente apertadas.
+
+COMPONENTES
+
+Padronize:
+
+botões;
+campos;
+seletores;
+cartões;
+modais;
+alertas;
+etiquetas de status;
+tabelas;
+barras de progresso;
+mensagens de confirmação.
+
+Os botões principais devem usar verde escuro ou azul escuro. Ações perigosas devem usar vermelho somente quando necessário.
+
+ACESSIBILIDADE
+
+Implemente:
+
+contraste adequado;
+foco visível;
+navegação por teclado;
+textos alternativos;
+rótulos nos campos;
+mensagens que não dependam somente de cor;
+tamanho confortável de fonte;
+botões com áreas clicáveis adequadas;
+layout adaptado a telas menores.
+
+TELA DE LOGIN
+
+Crie uma página simples e elegante, inspirada na divisão de cores da referência:
+
+uma área azul ou verde com o nome e uma breve descrição do sistema;
+uma área clara com formulário de login;
+e-mail ou usuário;
+senha;
+mostrar ou ocultar senha;
+botão “Entrar”;
+mensagens claras de erro.
+
+Não use fotografias de crianças, profissionais de saúde ou pacientes.
+
+IDENTIDADE DO PRODUTO
+
+Utilize o nome:
+
+Ponto Digital DIGEP
+
+Subtítulo:
+
+Gestão inteligente, segura e organizada de folhas de ponto.
+
+A interface deve transmitir:
+
+confiabilidade;
+organização;
+segurança;
+agilidade;
+inovação responsável.
+
+RESULTADO ESPERADO
+
+O resultado deve parecer um sistema administrativo real da DIGEP, e não uma clínica, portfólio ou página de propaganda.
+
+Mantenha o projeto adequado ao 5º semestre de Engenharia de Software:
+
+bonito, mas compreensível;
+profissional, mas sem complexidade visual desnecessária;
+funcional, e não somente uma apresentação;
+organizado para que os estudantes consigam explicar o código.
+
+ORDEM DE EXECUÇÃO
+
+Analise a imagem anexada.
+Analise a interface que já existe.
+Apresente brevemente quais componentes serão modificados.
+Crie primeiro o novo tema global.
+Atualize a tela de login.
+Atualize o menu lateral e o cabeçalho.
+Atualize o Dashboard.
+Atualize a tela de conferência do OCR.
+Aplique o padrão às outras páginas.
+Execute os testes e verifique responsividade.
+
+Não recrie todo o sistema do zero.
+
+Não remova funcionalidades existentes.
+
+Não altere o backend apenas por causa do design.
+
+Não declare o trabalho concluído sem executar o projeto e verificar se não existem erros.
+
+Comece agora pela atualização do tema, da tela de login e do Dashboard. Ao terminar, mostre as telas e aguarde minha autorização antes de modificar as páginas restantes.

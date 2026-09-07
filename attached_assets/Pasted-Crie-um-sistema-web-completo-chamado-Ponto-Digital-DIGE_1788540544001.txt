@@ -1,0 +1,489 @@
+Crie um sistema web completo chamado “Ponto Digital DIGEP” para automatizar o recebimento, identificação, conferência, arquivamento, consulta e envio de folhas de ponto dos servidores e professores da Universidade do Distrito Federal – UnDF.
+
+IMPORTANTE:
+- Não crie apenas um protótipo visual.
+- Implemente um MVP funcional de ponta a ponta.
+- Antes de programar, analise os arquivos fornecidos no projeto:
+  1. Projeto - Folhas de ponto da DIGEP.pdf
+  2. Modelo de folha de ponto - Exemplo.docx
+  3. Planilha de professores - exemplo.xlsx
+  4. Input - Folhas de ponto escaneadas - Exemplot.pdf
+  5. FolhaPonto-main.zip
+- Aproveite o que for útil do código existente, mas corrija os erros e reorganize a estrutura.
+- Não exponha documentos, credenciais ou dados pessoais em páginas públicas.
+
+OBJETIVO DO SISTEMA
+
+A DIGEP recebe mensalmente centenas de folhas de ponto digitalizadas. O sistema deverá:
+
+1. importar a planilha de servidores;
+2. receber um PDF com uma ou várias folhas de ponto;
+3. separar automaticamente cada página;
+4. aplicar tratamento de imagem;
+5. executar OCR;
+6. identificar matrícula, nome e competência;
+7. relacionar a folha ao servidor cadastrado;
+8. permitir conferência humana;
+9. arquivar a folha;
+10. permitir pesquisa, visualização e download;
+11. identificar servidores que acumulam cargo;
+12. enviar suas folhas ao e-mail pessoal cadastrado;
+13. registrar todo o processamento e o resultado dos envios.
+
+TECNOLOGIAS
+
+Utilize:
+
+- Frontend: React + TypeScript + Vite
+- Interface: Tailwind CSS + componentes acessíveis
+- Backend: Python + FastAPI
+- Banco de dados: PostgreSQL
+- ORM: SQLAlchemy
+- Validação: Pydantic
+- OCR: PaddleOCR
+- Imagens: OpenCV
+- PDFs: PyMuPDF
+- Autenticação: JWT com senhas criptografadas
+- Testes backend: Pytest
+- Testes frontend: Vitest
+- Docker Compose para aplicação e banco
+
+Se alguma tecnologia não funcionar no ambiente do Replit, escolha uma alternativa compatível, explique a mudança no README e mantenha todas as funcionalidades.
+
+PERFIS DE USUÁRIO
+
+Crie três perfis:
+
+1. Administrador:
+   - gerenciar usuários;
+   - importar servidores;
+   - configurar o sistema;
+   - visualizar auditoria.
+
+2. Operador DIGEP:
+   - enviar documentos;
+   - conferir OCR;
+   - corrigir dados;
+   - arquivar;
+   - autorizar envio de e-mail.
+
+3. Consulta:
+   - pesquisar;
+   - visualizar;
+   - baixar documentos autorizados.
+
+FUNCIONALIDADES OBRIGATÓRIAS
+
+1. AUTENTICAÇÃO
+
+- Login seguro.
+- Controle de acesso baseado em perfil.
+- Senhas armazenadas com hash.
+- Rotas privadas.
+- Logout.
+- Usuário administrador inicial configurado por variável de ambiente.
+- Nunca salvar senha real no código.
+
+2. IMPORTAÇÃO DE SERVIDORES
+
+Permitir upload de XLSX e CSV com as colunas:
+
+- Nome
+- Matrícula
+- CPF
+- E-mail
+- Carga Horária
+- Acumula cargo (Sim/Não)
+
+Durante a importação:
+
+- validar campos obrigatórios;
+- validar matrícula;
+- validar CPF;
+- validar e-mail;
+- impedir matrícula duplicada;
+- permitir atualizar registros existentes;
+- mostrar uma prévia antes de confirmar;
+- informar registros incluídos, atualizados e rejeitados;
+- permitir baixar um relatório dos erros;
+- armazenar CPF criptografado ou com proteção adequada;
+- exibir CPF mascarado na interface.
+
+3. UPLOAD EM LOTE
+
+Aceitar:
+
+- PDF com várias páginas;
+- vários PDFs;
+- PNG;
+- JPG e JPEG.
+
+O sistema deve:
+
+- validar formato e tamanho;
+- impedir arquivos maliciosos;
+- gerar hash SHA-256;
+- detectar duplicidade;
+- manter o arquivo original;
+- transformar cada página em uma folha individual;
+- mostrar o progresso do processamento.
+
+4. OCR E EXTRAÇÃO
+
+Antes do OCR:
+
+- corrigir orientação;
+- converter para escala de cinza;
+- melhorar contraste;
+- reduzir ruído;
+- aplicar binarização;
+- corrigir inclinação quando necessário.
+
+Extrair prioritariamente:
+
+- matrícula;
+- nome do servidor;
+- competência no formato mês/ano;
+- cargo;
+- carga horária;
+- unidade de exercício.
+
+Utilizar expressões regulares e a posição dos campos no formulário da UnDF.
+
+A matrícula é o identificador principal. O nome deve ser utilizado como validação secundária.
+
+Para cada campo, guardar:
+
+- valor extraído;
+- confiança do OCR;
+- valor corrigido, se houver;
+- usuário que corrigiu;
+- data da correção.
+
+5. REGRAS DE CONFIANÇA
+
+- Acima de 90% e matrícula encontrada: classificar como “Reconhecido”.
+- Entre 70% e 89%: classificar como “Revisão necessária”.
+- Abaixo de 70%: classificar como “Baixa confiança”.
+- Matrícula não encontrada: “Servidor não identificado”.
+- Matrícula e nome incompatíveis: “Possível divergência”.
+- Nunca descartar uma folha por erro de OCR.
+
+6. CONFERÊNCIA HUMANA
+
+Criar uma tela dividida:
+
+- lado esquerdo: visualização da folha;
+- lado direito: dados reconhecidos.
+
+Permitir:
+
+- selecionar servidor;
+- corrigir matrícula;
+- corrigir nome;
+- corrigir competência;
+- consultar confiança;
+- confirmar associação;
+- rejeitar processamento;
+- adicionar observação;
+- encaminhar para pendência.
+
+Somente depois da confirmação a folha poderá ser considerada arquivada.
+
+7. ARQUIVAMENTO
+
+Guardar cada folha relacionada a:
+
+- servidor;
+- matrícula;
+- competência;
+- lote de origem;
+- arquivo original;
+- página original;
+- usuário responsável;
+- resultado do OCR;
+- data de processamento;
+- data de conferência.
+
+Criar restrição para evitar duas folhas ativas do mesmo servidor na mesma competência. Caso haja substituição, preservar a versão anterior no histórico.
+
+Nome padronizado:
+
+ANO/MÊS/MATRÍCULA_NOME_NORMALIZADO.pdf
+
+8. CONSULTA
+
+Permitir pesquisa por:
+
+- nome;
+- matrícula;
+- competência;
+- cargo;
+- unidade;
+- acumulação de cargo;
+- situação da conferência;
+- situação do envio.
+
+Permitir:
+
+- visualizar;
+- baixar;
+- consultar histórico;
+- filtrar;
+- ordenar;
+- paginar resultados;
+- exportar relatório CSV.
+
+9. ACUMULAÇÃO DE CARGO E E-MAIL
+
+Quando “Acumula cargo” for “Sim”:
+
+- colocar a folha na fila de envio;
+- mostrar destinatário;
+- exigir confirmação humana antes do envio;
+- anexar somente a folha correspondente;
+- utilizar e-mail configurado por variáveis de ambiente;
+- não colocar credenciais no código;
+- registrar data, horário, destinatário, usuário responsável e resultado.
+
+Status:
+
+- Não aplicável
+- Pendente
+- Autorizado
+- Enviando
+- Enviado
+- Erro
+- Reenviado
+
+Criar botão para tentar novamente em caso de erro.
+
+No ambiente de desenvolvimento, implementar modo de simulação de e-mail para evitar envio real.
+
+10. DASHBOARD
+
+Exibir:
+
+- folhas recebidas na competência;
+- reconhecidas automaticamente;
+- aguardando conferência;
+- baixa confiança;
+- servidores não identificados;
+- duplicidades;
+- folhas arquivadas;
+- envios pendentes;
+- envios concluídos;
+- erros de envio;
+- percentual de reconhecimento;
+- tempo médio de processamento.
+
+Adicionar filtros por competência.
+
+11. AUDITORIA
+
+Registrar:
+
+- login e logout;
+- importação de planilha;
+- upload;
+- processamento de OCR;
+- associação;
+- correção manual;
+- arquivamento;
+- visualização;
+- download;
+- autorização de envio;
+- envio;
+- erro;
+- substituição de documento.
+
+Cada log deve conter:
+
+- usuário;
+- ação;
+- data e horário;
+- entidade afetada;
+- identificação do registro;
+- resultado;
+- detalhes relevantes sem expor senha ou segredo.
+
+BANCO DE DADOS
+
+Crie, no mínimo, as tabelas:
+
+- users
+- employees
+- competencies
+- upload_batches
+- timesheets
+- ocr_results
+- email_dispatches
+- audit_logs
+
+Inclua:
+
+- chaves estrangeiras;
+- índices para matrícula, nome e competência;
+- datas de criação e atualização;
+- exclusão lógica;
+- controle de versão;
+- migrations.
+
+INTERFACE
+
+Crie uma interface profissional, limpa, institucional e responsiva.
+
+Use:
+
+- azul, branco e tons neutros;
+- contraste adequado;
+- menu lateral;
+- cabeçalho com nome do usuário;
+- feedback de carregamento;
+- mensagens de erro claras;
+- confirmações para ações críticas;
+- tabelas responsivas;
+- estados vazios;
+- indicadores de status;
+- acessibilidade por teclado;
+- textos em português do Brasil.
+
+Páginas:
+
+1. Login
+2. Dashboard
+3. Servidores
+4. Importar servidores
+5. Novo lote
+6. Processamento do lote
+7. Conferência de OCR
+8. Arquivo de folhas
+9. Detalhes da folha
+10. Fila de envio
+11. Histórico de envios
+12. Auditoria
+13. Usuários
+14. Configurações
+
+SEGURANÇA E LGPD
+
+- Aplicar princípio do menor privilégio.
+- Proteger documentos contra acesso público.
+- Validar todos os uploads.
+- Mascarar CPF.
+- Não registrar dados sensíveis desnecessários nos logs.
+- Não guardar credenciais no repositório.
+- Utilizar variáveis de ambiente.
+- Implementar limite de tentativas de login.
+- Validar autorização para downloads.
+- Preparar política de retenção e exclusão.
+- Incluir aviso de que o sistema trata dados pessoais funcionais.
+- Não utilizar dados reais nos testes automatizados.
+
+DADOS DE DEMONSTRAÇÃO
+
+Crie dados totalmente fictícios e claramente identificados como demonstração.
+
+Também crie um modo de demonstração que permita executar o sistema mesmo quando o PaddleOCR ou o serviço de e-mail não estiverem disponíveis. Nesse modo, simule resultados de OCR e envio sem fingir que houve processamento real.
+
+TESTES
+
+Crie testes para:
+
+- login;
+- permissões;
+- importação válida;
+- planilha inválida;
+- matrícula duplicada;
+- upload de PDF;
+- separação das páginas;
+- extração de matrícula;
+- identificação do servidor;
+- baixa confiança;
+- divergência de nome;
+- documento duplicado;
+- arquivamento;
+- pesquisa;
+- autorização de envio;
+- envio simulado;
+- erro e reenvio;
+- auditoria;
+- tentativa de download sem autorização.
+
+CRITÉRIOS DE ACEITAÇÃO
+
+O sistema estará pronto quando:
+
+1. for possível importar servidores;
+2. for possível enviar o PDF de exemplo;
+3. as três páginas forem separadas;
+4. matrícula, nome e competência forem extraídos;
+5. cada página puder ser conferida;
+6. as folhas forem associadas aos servidores;
+7. os documentos forem pesquisáveis;
+8. os acumuladores forem direcionados à fila de envio;
+9. o envio puder ser autorizado e simulado;
+10. as ações forem registradas na auditoria;
+11. os testes principais passarem;
+12. não existirem senhas ou segredos no repositório.
+
+ENTREGÁVEIS
+
+Gere:
+
+- aplicação funcional;
+- migrations do banco;
+- dados fictícios;
+- testes;
+- arquivo .env.example sem segredos;
+- Docker Compose;
+- README completo;
+- instruções para rodar no Replit;
+- diagrama da arquitetura;
+- modelo do banco;
+- lista de limitações;
+- checklist dos requisitos RF01 a RF12.
+
+MODO DE EXECUÇÃO
+
+Trabalhe em etapas e não tente gerar tudo superficialmente de uma vez:
+
+FASE 1:
+- analisar arquivos existentes;
+- apresentar arquitetura e plano;
+- organizar pastas;
+- corrigir o código atual;
+- criar banco e autenticação.
+
+FASE 2:
+- importação de servidores;
+- upload em lote;
+- separação das páginas;
+- OCR e extração.
+
+FASE 3:
+- conferência;
+- arquivamento;
+- consulta;
+- dashboard.
+
+FASE 4:
+- acumuladores;
+- e-mail;
+- auditoria;
+- segurança.
+
+FASE 5:
+- testes;
+- documentação;
+- revisão final.
+
+Ao final de cada fase:
+- execute os testes;
+- mostre o que foi concluído;
+- informe erros encontrados;
+- não marque funcionalidade como pronta sem testar;
+- peça autorização antes de avançar para a próxima fase.
+
+Comece agora somente pela FASE 1.
+Primeiro apresente resumidamente a arquitetura e o plano de implementação. Depois analise o repositório e implemente a base da FASE 1.

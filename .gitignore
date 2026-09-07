@@ -3,3 +3,8 @@ FolhaPontoMobile
 FolhaPontoBack/.venv
 FolhaPontoBack/imgs/editadas/*
 output
+data/
+.pythonlibs/
+.venv/
+__pycache__/
+*.pyc
