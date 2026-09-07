@@ -1,16 +1,20 @@
-"""API do MVP do Ponto Digital DIGEP.
+"""API do Ponto Digital DIGEP.
 
-A aplicação é deliberadamente simples: FastAPI + SQLite local + arquivos fora
-da pasta pública. Isso deixa o fluxo demonstrável no Replit e fácil de explicar
-em sala, sem esconder dependências em serviços externos.
+O backend mantém os arquivos fora da pasta pública, separa cada página enviada,
+registra o resultado individual do OCR e permite importar servidores por CSV/XLSX.
+Quando um mecanismo de OCR não está instalado, o resultado fica explicitamente
+marcado como ``OCR indisponível``; nenhum dado é preenchido por demonstração.
 """
 
 from __future__ import annotations
 
+import csv
 import hashlib
+import io
 import json
 import re
 import sqlite3
+import unicodedata
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -30,20 +34,8 @@ UPLOAD_DIR = DATA_DIR / "uploads"
 DB_PATH = DATA_DIR / "digep.sqlite3"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-app = FastAPI(title="Ponto Digital DIGEP", version="0.2.0")
-
-DEMO_EMPLOYEES = [
-    ("Alexandre Nata Vicente", "17289106", "alexandre.demo@example.invalid", 40, 0),
-    ("Ana Ribeiro", "16234018", "ana.demo@example.invalid", 40, 0),
-    ("Caio Ferreira", "17450291", "caio.demo@example.invalid", 40, 1),
-    ("João Martins", "16871904", "joao.demo@example.invalid", 40, 1),
-]
-DEMO_SHEETS = [
-    ("Alexandre Nata Vicente", "17289106", 78, "revisao", "JULHO/2026", "CEINTER"),
-    ("Ana Ribeiro", "16234018", 62, "baixa_confianca", "JULHO/2026", "CEINTER"),
-    ("Caio Ferreira", "17450291", 78, "revisao", "JULHO/2026", "CEINTER"),
-    ("Servidor não identificado", None, 41, "nao_identificado", "JULHO/2026", None),
-]
+app = FastAPI(title="Ponto Digital DIGEP", version="0.3.0")
+IMPORT_PREVIEWS: dict[str, dict[str, Any]] = {}
 
 
 def now() -> str:
@@ -67,6 +59,12 @@ def connect() -> sqlite3.Connection:
     return connection
 
 
+def ensure_column(db: sqlite3.Connection, table: str, column: str, definition: str) -> None:
+    columns = {row["name"] for row in db.execute(f"PRAGMA table_info({table})").fetchall()}
+    if column not in columns:
+        db.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+
+
 def init_db() -> None:
     with connect() as db:
         db.executescript(
@@ -75,10 +73,12 @@ def init_db() -> None:
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               name TEXT NOT NULL,
               matricula TEXT NOT NULL UNIQUE,
-              email TEXT NOT NULL,
+              cpf TEXT NOT NULL DEFAULT '',
+              email TEXT NOT NULL DEFAULT '',
               carga_horaria INTEGER NOT NULL DEFAULT 40,
               acumula_cargo INTEGER NOT NULL DEFAULT 0,
-              created_at TEXT NOT NULL
+              created_at TEXT NOT NULL,
+              updated_at TEXT NOT NULL
             );
             CREATE TABLE IF NOT EXISTS batches (
               id TEXT PRIMARY KEY,
@@ -103,6 +103,10 @@ def init_db() -> None:
               reviewed_at TEXT,
               archived_at TEXT,
               source_page INTEGER NOT NULL DEFAULT 1,
+              stored_path TEXT,
+              sha256 TEXT,
+              extracted_text TEXT NOT NULL DEFAULT '',
+              processing_mode TEXT NOT NULL DEFAULT 'ocr-indisponivel',
               created_at TEXT NOT NULL,
               updated_at TEXT NOT NULL,
               FOREIGN KEY(batch_id) REFERENCES batches(id),
@@ -121,33 +125,22 @@ def init_db() -> None:
             CREATE INDEX IF NOT EXISTS idx_timesheets_status ON timesheets(status);
             """
         )
-        employee_count = db.execute("SELECT COUNT(*) FROM employees").fetchone()[0]
-        if employee_count == 0:
-            db.executemany(
-                """
-                INSERT INTO employees (name, matricula, email, carga_horaria, acumula_cargo, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                [(*employee, now()) for employee in DEMO_EMPLOYEES],
-            )
-        sheet_count = db.execute("SELECT COUNT(*) FROM timesheets").fetchone()[0]
-        if sheet_count == 0:
-            for index, (name, matricula, confidence, status, competency, unit) in enumerate(DEMO_SHEETS):
-                employee_id = None
-                if matricula:
-                    row = db.execute("SELECT id FROM employees WHERE matricula = ?", (matricula,)).fetchone()
-                    employee_id = row["id"] if row else None
-                db.execute(
-                    """
-                    INSERT INTO timesheets
-                    (name, matricula, competencia, unidade, confidence, status, source_page, created_at, updated_at, employee_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (name, matricula, competency, unit, confidence, status, index + 1, now(), now(), employee_id),
-                )
+        # Migra bancos criados na primeira versão sem apagar os scripts originais.
+        for table, column, definition in (
+            ("employees", "cpf", "TEXT NOT NULL DEFAULT ''"),
+            ("employees", "updated_at", "TEXT NOT NULL DEFAULT ''"),
+            ("timesheets", "stored_path", "TEXT"),
+            ("timesheets", "sha256", "TEXT"),
+            ("timesheets", "extracted_text", "TEXT NOT NULL DEFAULT ''"),
+            ("timesheets", "processing_mode", "TEXT NOT NULL DEFAULT 'ocr-indisponivel'"),
+        ):
+            ensure_column(db, table, column, definition)
+        # Remove apenas as folhas sintéticas da primeira versão; folhas reais
+        # sempre pertencem a um lote e permanecem no histórico.
+        db.execute("DELETE FROM timesheets WHERE batch_id IS NULL")
         db.execute(
             "INSERT INTO audit_logs (action, entity, entity_id, details, created_at) VALUES (?, ?, ?, ?, ?)",
-            ("startup", "system", None, json.dumps({"mode": "demo"}), now()),
+            ("startup", "system", None, json.dumps({"mode": "real-page-processing"}), now()),
         )
 
 
@@ -164,15 +157,23 @@ class ReviewPayload(BaseModel):
     note: str = Field(default="", max_length=500)
 
 
+class ImportConfirmPayload(BaseModel):
+    preview_id: str = Field(min_length=8, max_length=80)
+
+
 def row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
     item = dict(row)
     item["confidence"] = int(item["confidence"])
     item["employee_id"] = item.get("employee_id")
+    item.pop("stored_path", None)
+    item.pop("sha256", None)
+    item["download_url"] = f"/api/timesheets/{item['id']}/download" if row["stored_path"] else None
     item["status_label"] = {
         "reconhecida": "Reconhecida",
         "revisao": "Revisão necessária",
         "baixa_confianca": "Baixa confiança",
         "nao_identificado": "Não identificado",
+        "ocr_indisponivel": "OCR indisponível",
         "pendente": "Pendente",
         "arquivada": "Arquivada",
         "rejeitada": "Rejeitada",
@@ -189,35 +190,35 @@ def audit(db: sqlite3.Connection, action: str, entity: str, entity_id: str | int
 
 @app.get("/api/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "mode": "demo", "database": "sqlite"}
+    return {"status": "ok", "mode": "real", "database": "sqlite"}
 
 
 @app.get("/api/dashboard")
 def dashboard(competency: str = Query("07/2026")) -> dict[str, Any]:
     competency = normalize_competency(competency)
     with connect() as db:
-        rows = db.execute("SELECT * FROM timesheets WHERE competencia LIKE ?", (f"%{competency[-7:]}%",)).fetchall()
-        all_rows = db.execute("SELECT * FROM timesheets").fetchall()
-        statuses = {status: sum(1 for row in rows if row["status"] == status) for status in ("reconhecida", "revisao", "baixa_confianca", "nao_identificado", "arquivada")}
+        rows = db.execute("SELECT * FROM timesheets WHERE competencia = ?", (competency,)).fetchall()
+        statuses = {status: sum(1 for row in rows if row["status"] == status) for status in (
+            "reconhecida", "revisao", "baixa_confianca", "nao_identificado", "ocr_indisponivel", "arquivada"
+        )}
         total = len(rows)
-        archived = statuses["arquivada"]
         recognized = statuses["reconhecida"]
         pending = statuses["revisao"] + statuses["baixa_confianca"] + statuses["nao_identificado"]
-        pending += sum(1 for row in rows if row["status"] == "pendente")
+        pending += statuses["ocr_indisponivel"] + sum(1 for row in rows if row["status"] == "pendente")
         return {
             "competency": competency,
             "total": total,
             "recognized": recognized,
             "review": pending,
             "low_confidence": statuses["baixa_confianca"],
-            "unidentified": statuses["nao_identificado"],
-            "archived": archived,
+            "unidentified": statuses["nao_identificado"] + statuses["ocr_indisponivel"],
+            "archived": statuses["arquivada"],
             "recognition_rate": round((recognized / total) * 100) if total else 0,
-            "average_processing_seconds": 102,
-            "dispatch_pending": 7,
-            "dispatch_sent": 7,
-            "demo": True,
-            "sample_size": len(all_rows),
+            "average_processing_seconds": 0,
+            "dispatch_pending": 0,
+            "dispatch_sent": 0,
+            "demo": False,
+            "sample_size": total,
         }
 
 
@@ -227,8 +228,8 @@ def list_timesheets(
     q: str | None = None,
     competency: str = "07/2026",
 ) -> list[dict[str, Any]]:
-    conditions = ["competencia LIKE ?"]
-    params: list[Any] = [f"%{normalize_competency(competency)}%"]
+    conditions = ["competencia = ?"]
+    params: list[Any] = [normalize_competency(competency)]
     if status and status != "todos":
         conditions.append("status = ?")
         params.append(status)
@@ -272,18 +273,17 @@ def review_timesheet(timesheet_id: int, payload: ReviewPayload) -> dict[str, Any
                 status = 'arquivada', reviewed_at = ?, archived_at = ?, updated_at = ?
             WHERE id = ?
             """,
-            (payload.name, payload.matricula, payload.competencia, employee_id, payload.note, now(), now(), now(), timesheet_id),
+            (payload.name, payload.matricula, normalize_competency(payload.competencia), employee_id,
+             payload.note, now(), now(), now(), timesheet_id),
         )
         audit(db, "archive", "timesheet", timesheet_id, {"name": payload.name, "mode": "manual-review"})
-        row = db.execute("SELECT * FROM timesheets WHERE id = ?", (timesheet_id,)).fetchone()
-        return row_to_dict(row)
+        return row_to_dict(db.execute("SELECT * FROM timesheets WHERE id = ?", (timesheet_id,)).fetchone())
 
 
 @app.post("/api/timesheets/{timesheet_id}/pending")
 def mark_pending(timesheet_id: int, note: str = "") -> dict[str, Any]:
     with connect() as db:
-        current = db.execute("SELECT * FROM timesheets WHERE id = ?", (timesheet_id,)).fetchone()
-        if not current:
+        if not db.execute("SELECT id FROM timesheets WHERE id = ?", (timesheet_id,)).fetchone():
             raise HTTPException(404, "Folha não encontrada.")
         db.execute("UPDATE timesheets SET status = 'pendente', note = ?, updated_at = ? WHERE id = ?", (note[:500], now(), timesheet_id))
         audit(db, "pending", "timesheet", timesheet_id, {"note": note[:120]})
@@ -300,6 +300,17 @@ def reject_timesheet(timesheet_id: int) -> dict[str, Any]:
         return row_to_dict(db.execute("SELECT * FROM timesheets WHERE id = ?", (timesheet_id,)).fetchone())
 
 
+def _page_status(extraction: dict[str, Any], employee: sqlite3.Row | None) -> str:
+    mode = extraction["mode"]
+    if mode == "ocr-indisponivel":
+        return "ocr_indisponivel"
+    if not extraction["matricula"] or not extraction["nome"] or not extraction["competencia"]:
+        return "nao_identificado" if not extraction["matricula"] else "revisao"
+    if employee is None:
+        return "nao_identificado"
+    return "reconhecida" if extraction["confidence"] >= 0.9 else "revisao"
+
+
 @app.post("/api/batches")
 async def create_batch(file: UploadFile = File(...)) -> dict[str, Any]:
     original_name = Path(file.filename or "").name
@@ -313,37 +324,201 @@ async def create_batch(file: UploadFile = File(...)) -> dict[str, Any]:
         raise HTTPException(413, "O arquivo excede o limite de 20 MB.")
     digest = hashlib.sha256(content).hexdigest()
     with connect() as db:
-        existing = db.execute("SELECT id FROM batches WHERE sha256 = ?", (digest,)).fetchone()
-        if existing:
+        if db.execute("SELECT id FROM batches WHERE sha256 = ?", (digest,)).fetchone():
             raise HTTPException(409, "Este arquivo já foi processado.")
         batch_id = f"LOTE-{datetime.now().strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:5].upper()}"
         target = UPLOAD_DIR / f"{batch_id}{suffix}"
+        pages_dir = UPLOAD_DIR / batch_id
         target.write_bytes(content)
-        processed = process_document(target)
-        batch_mode = processed["extraction"]["mode"]
+        processed = process_document(target, pages_dir)
+        page_modes = [page["extraction"]["mode"] for page in processed["page_results"]]
+        batch_mode = page_modes[0] if len(set(page_modes)) == 1 and page_modes else "misto"
         db.execute(
             "INSERT INTO batches (id, original_name, stored_path, sha256, page_count, mode, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (batch_id, original_name, str(target.relative_to(ROOT)), digest, processed["pages"], batch_mode, now()),
+            (batch_id, original_name, str(target.relative_to(DATA_DIR)), digest, processed["pages"], batch_mode, now()),
         )
-        seed = DEMO_SHEETS
-        for page in range(processed["pages"]):
-            base = seed[page % len(seed)]
-            name, matricula, confidence, status, competency, unit = base
-            db.execute(
+        created: list[dict[str, Any]] = []
+        for page in processed["page_results"]:
+            extraction = page["extraction"]
+            employee = None
+            if extraction["matricula"]:
+                employee = db.execute("SELECT * FROM employees WHERE matricula = ?", (extraction["matricula"],)).fetchone()
+            status = _page_status(extraction, employee)
+            row_name = extraction["nome"] or "Não identificado"
+            competency = normalize_competency(extraction["competencia"]) if extraction["competencia"] else "NÃO RECONHECIDA"
+            page_bytes = page["stored_path"].read_bytes()
+            page_hash = hashlib.sha256(page_bytes).hexdigest()
+            cursor = db.execute(
                 """
                 INSERT INTO timesheets
-                (batch_id, name, matricula, competencia, unidade, confidence, status, source_page, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (batch_id, employee_id, name, matricula, competencia, unidade, confidence, status,
+                 source_page, stored_path, sha256, extracted_text, processing_mode, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (batch_id, name, matricula, competency, unit, confidence, status, page + 1, now(), now()),
+                (batch_id, employee["id"] if employee else None, row_name, extraction["matricula"],
+                 competency, None, round(extraction["confidence"] * 100), status, page["source_page"],
+                 str(page["stored_path"].relative_to(DATA_DIR)), page_hash, extraction["text"],
+                 extraction["mode"], now(), now()),
             )
+            created.append({"id": cursor.lastrowid, "source_page": page["source_page"], "status": status,
+                            "mode": extraction["mode"], "matricula": extraction["matricula"],
+                            "nome": extraction["nome"], "competencia": extraction["competencia"],
+                            "confidence": round(extraction["confidence"] * 100)})
         audit(db, "upload", "batch", batch_id, {"pages": processed["pages"], "mode": batch_mode})
-    return {"batch_id": batch_id, "pages": processed["pages"], "mode": batch_mode, "status": "processed"}
+    return {"batch_id": batch_id, "pages": processed["pages"], "mode": batch_mode, "status": "processed", "timesheets": created}
+
+
+def _header_key(value: Any) -> str:
+    text = unicodedata.normalize("NFKD", str(value or "")).encode("ascii", "ignore").decode()
+    return re.sub(r"[^A-Z0-9]+", " ", text.upper()).strip()
+
+
+HEADER_MAP = {
+    "NOME": "name",
+    "MATRICULA": "matricula",
+    "CPF": "cpf",
+    "E MAIL": "email",
+    "EMAIL": "email",
+    "CARGA HORARIA": "carga_horaria",
+    "ACUMULA CARGO SIM NAO": "acumula_cargo",
+    "ACUMULA CARGO": "acumula_cargo",
+}
+REQUIRED_IMPORT_COLUMNS = {"name", "matricula", "cpf", "email", "carga_horaria", "acumula_cargo"}
+
+
+def _read_import_rows(filename: str, content: bytes) -> list[dict[str, Any]]:
+    suffix = Path(filename).suffix.lower()
+    if suffix == ".csv":
+        text = content.decode("utf-8-sig", errors="replace")
+        reader = csv.reader(io.StringIO(text))
+        raw_rows = list(reader)
+        if not raw_rows:
+            raise HTTPException(422, "A planilha está vazia.")
+        headers = raw_rows[0]
+        values = raw_rows[1:]
+    elif suffix == ".xlsx":
+        try:
+            from openpyxl import load_workbook
+        except ImportError as exc:
+            raise HTTPException(503, "Suporte XLSX indisponível neste ambiente.") from exc
+        workbook = load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+        sheet = workbook.active
+        rows = list(sheet.iter_rows(values_only=True))
+        if not rows:
+            raise HTTPException(422, "A planilha está vazia.")
+        headers, values = rows[0], rows[1:]
+    else:
+        raise HTTPException(400, "Formato inválido. Envie CSV ou XLSX.")
+    mapped = [_header_key(header) for header in headers]
+    canonical = [HEADER_MAP.get(header) for header in mapped]
+    missing = REQUIRED_IMPORT_COLUMNS - {key for key in canonical if key}
+    if missing:
+        raise HTTPException(422, f"Colunas obrigatórias ausentes: {', '.join(sorted(missing))}.")
+    parsed = []
+    for values_row in values:
+        parsed.append({key: (values_row[index] if index < len(values_row) else "") for index, key in enumerate(canonical) if key})
+    return parsed
+
+
+def _validate_import_rows(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    with connect() as db:
+        existing = {row["matricula"] for row in db.execute("SELECT matricula FROM employees").fetchall()}
+    seen: set[str] = set()
+    valid: list[dict[str, Any]] = []
+    invalid: list[dict[str, Any]] = []
+    for line_number, raw in enumerate(rows, start=2):
+        row = {key: str(value or "").strip() for key, value in raw.items()}
+        errors: list[str] = []
+        if not row["name"]:
+            errors.append("Nome é obrigatório")
+        matricula = re.sub(r"\D", "", row["matricula"])
+        if not matricula:
+            errors.append("Matrícula é obrigatória")
+        elif matricula in seen:
+            errors.append("Matrícula duplicada na planilha")
+        seen.add(matricula)
+        try:
+            carga = int(float(row["carga_horaria"].replace(",", ".")))
+            if carga <= 0 or carga > 100:
+                raise ValueError
+        except ValueError:
+            errors.append("Carga Horária deve ser um número entre 1 e 100")
+            carga = 0
+        acumula_value = _header_key(row["acumula_cargo"])
+        if acumula_value not in {"SIM", "NAO"}:
+            errors.append("Acumula cargo deve ser Sim ou Não")
+        if row["email"] and not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", row["email"]):
+            errors.append("E-mail inválido")
+        normalized = {
+            "name": row["name"], "matricula": matricula, "cpf": re.sub(r"\D", "", row["cpf"]),
+            "email": row["email"], "carga_horaria": carga, "acumula_cargo": int(acumula_value == "SIM"),
+            "line": line_number, "action": "update" if matricula in existing else "insert",
+        }
+        if errors:
+            invalid.append({"line": line_number, "values": normalized, "errors": errors})
+        else:
+            valid.append(normalized)
+    return valid, invalid
+
+
+@app.post("/api/employees/import/preview")
+async def preview_employee_import(file: UploadFile = File(...)) -> dict[str, Any]:
+    filename = Path(file.filename or "").name
+    content = await file.read()
+    rows = _read_import_rows(filename, content)
+    valid, invalid = _validate_import_rows(rows)
+    preview_id = uuid.uuid4().hex
+    IMPORT_PREVIEWS[preview_id] = {"valid": valid, "invalid": invalid, "filename": filename, "created_at": now()}
+    return {
+        "preview_id": preview_id,
+        "filename": filename,
+        "total_rows": len(rows),
+        "valid_rows": len(valid),
+        "invalid_rows": len(invalid),
+        "rows": valid,
+        "errors": invalid,
+    }
+
+
+@app.post("/api/employees/import/confirm")
+def confirm_employee_import(payload: ImportConfirmPayload) -> dict[str, Any]:
+    preview = IMPORT_PREVIEWS.pop(payload.preview_id, None)
+    if not preview:
+        raise HTTPException(404, "Prévia não encontrada ou já confirmada.")
+    inserted = updated = 0
+    with connect() as db:
+        for row in preview["valid"]:
+            existing = db.execute("SELECT id FROM employees WHERE matricula = ?", (row["matricula"],)).fetchone()
+            values = (row["name"], row["cpf"], row["email"], row["carga_horaria"], row["acumula_cargo"], now())
+            if existing:
+                db.execute(
+                    "UPDATE employees SET name = ?, cpf = ?, email = ?, carga_horaria = ?, acumula_cargo = ?, updated_at = ? WHERE id = ?",
+                    (*values, existing["id"]),
+                )
+                updated += 1
+            else:
+                db.execute(
+                    """
+                    INSERT INTO employees (name, matricula, cpf, email, carga_horaria, acumula_cargo, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (row["name"], row["matricula"], row["cpf"], row["email"], row["carga_horaria"], row["acumula_cargo"], now(), now()),
+                )
+                inserted += 1
+        audit(db, "import", "employees", None, {"filename": preview["filename"], "inserted": inserted, "updated": updated})
+    return {"status": "confirmed", "inserted": inserted, "updated": updated, "rejected": len(preview["invalid"])}
 
 
 @app.get("/api/timesheets/{timesheet_id}/download")
 def download_timesheet(timesheet_id: int) -> FileResponse:
-    raise HTTPException(501, "Download será liberado após o arquivamento do arquivo original.")
+    with connect() as db:
+        row = db.execute("SELECT stored_path FROM timesheets WHERE id = ?", (timesheet_id,)).fetchone()
+    if not row or not row["stored_path"]:
+        raise HTTPException(404, "Arquivo individual não encontrado.")
+    path = (DATA_DIR / row["stored_path"]).resolve()
+    if DATA_DIR.resolve() not in path.parents or not path.is_file():
+        raise HTTPException(404, "Arquivo individual não encontrado.")
+    return FileResponse(path, filename=path.name, media_type="application/pdf")
 
 
 @app.get("/")
