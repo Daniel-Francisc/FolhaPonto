@@ -11,6 +11,10 @@ import server
 from FolhaPontoBack import processing
 
 
+ADMIN_USERNAME = "admin@undf.edu.br"
+ADMIN_PASSWORD = "admin123"
+
+
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     data_dir = tmp_path / "data"
@@ -19,8 +23,34 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(server, "DATA_DIR", data_dir)
     monkeypatch.setattr(server, "UPLOAD_DIR", upload_dir)
     monkeypatch.setattr(server, "DB_PATH", data_dir / "digep.sqlite3")
+    monkeypatch.setenv("ADMIN_USERNAME", ADMIN_USERNAME)
+    monkeypatch.setenv("ADMIN_PASSWORD", ADMIN_PASSWORD)
     with TestClient(server.app) as test_client:
-        yield test_client
+        token = test_client.post(
+            "/api/auth/login",
+            json={"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD},
+        ).json()["access_token"]
+        yield AuthedClient(test_client, token)
+
+
+class AuthedClient:
+    def __init__(self, client, token):
+        self._client = client
+        self._headers = {"Authorization": f"Bearer {token}"}
+
+    def request(self, method, url, **kwargs):
+        headers = dict(self._headers)
+        headers.update(kwargs.pop("headers", {}))
+        return self._client.request(method, url, headers=headers, **kwargs)
+
+    def get(self, url, **kwargs):
+        return self.request("GET", url, **kwargs)
+
+    def post(self, url, **kwargs):
+        return self.request("POST", url, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._client, name)
 
 
 def three_page_pdf() -> bytes:
