@@ -1,0 +1,117 @@
+Continue o desenvolvimento do Ponto Digital DIGEP sem recriar o projeto e sem alterar a identidade visual ou os créditos já aprovados.
+
+Antes de começar:
+- preserve todas as funcionalidades existentes;
+- não remova o backend FastAPI;
+- não altere os créditos;
+- não substitua o código funcional por dados estáticos;
+- não utilize dados fictícios como se fossem resultado real do OCR.
+
+PRIORIDADE DESTA ETAPA
+
+Implementar a Fase 2 funcional:
+
+1. Importação de servidores por XLSX e CSV.
+2. Prévia e validação da planilha.
+3. Separação física de cada página do PDF em um arquivo individual.
+4. OCR real de cada página escaneada.
+5. Extração individual de matrícula, nome e competência.
+6. Associação de cada página ao servidor cadastrado.
+7. Armazenamento do arquivo correspondente a cada folha.
+8. Visualização e download reais.
+9. Testes automatizados da API e do processamento.
+
+CORREÇÃO OBRIGATÓRIA
+
+No endpoint POST /api/batches, remova o uso de DEMO_SHEETS para gerar resultados das páginas enviadas.
+
+Atualmente o sistema atribui dados fictícios a cada página. Isso não pode ser apresentado como OCR real.
+
+Para cada página:
+- gerar um PDF ou imagem individual;
+- executar OCR;
+- extrair os dados daquela página;
+- calcular confiança;
+- procurar a matrícula na tabela de servidores;
+- criar um registro próprio no banco;
+- manter status de revisão se a confiança for insuficiente.
+
+Se PaddleOCR não estiver disponível:
+- usar uma alternativa compatível com o Replit;
+- ou classificar como “OCR indisponível”;
+- nunca preencher automaticamente com nome ou matrícula fictícios.
+
+IMPORTAÇÃO DA PLANILHA
+
+Aceitar as colunas:
+- Nome
+- Matrícula
+- CPF
+- E-mail
+- Carga Horária
+- Acumula cargo (Sim/Não)
+
+Implementar:
+- upload;
+- prévia;
+- validação;
+- confirmação;
+- inclusão e atualização;
+- rejeição de linhas inválidas;
+- relatório de erros;
+- bloqueio de matrícula duplicada.
+
+ARQUIVOS
+
+Não expor diretamente a pasta de uploads.
+
+Cada folha deve guardar:
+- lote;
+- página original;
+- caminho do arquivo individual;
+- hash;
+- matrícula;
+- servidor associado;
+- competência;
+- texto extraído;
+- confiança;
+- modo de processamento;
+- status.
+
+TESTES OBRIGATÓRIOS
+
+Adicionar pytest às dependências e testar:
+- importação válida;
+- planilha inválida;
+- matrícula duplicada;
+- PDF com três páginas;
+- criação de três folhas individuais;
+- extração dos campos;
+- associação por matrícula;
+- documento duplicado;
+- OCR indisponível;
+- revisão;
+- arquivamento;
+- download.
+
+Também corrija o README:
+- não afirmar que o fluxo está completo enquanto houver simulação;
+- explicar claramente o que é real e o que permanece demonstrativo.
+
+ORGANIZAÇÃO DO REPOSITÓRIO
+
+- retirar o PDF do ARBOGAME, pois não pertence ao projeto;
+- não versionar banco SQLite;
+- não versionar uploads processados;
+- remover cópias desnecessárias dos prompts;
+- manter somente documentos acadêmicos indispensáveis;
+- atualizar o .gitignore;
+- não apagar os arquivos originais sem primeiro confirmar quais serão mantidos.
+
+Ao final:
+1. execute todos os testes;
+2. mostre os resultados;
+3. processe o PDF de exemplo com três páginas;
+4. apresente o que foi reconhecido em cada página;
+5. informe claramente qualquer campo não reconhecido;
+6. aguarde autorização antes de iniciar autenticação e envio de e-mail.
