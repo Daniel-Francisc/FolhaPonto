@@ -33,7 +33,34 @@ from FolhaPontoBack.processing import process_document
 from security import display_cpf, protect_cpf
 
 ROOT = Path(__file__).resolve().parent
-DATA_DIR = ROOT / "data"
+
+
+def _resolve_data_dir() -> Path:
+    """Return a writable directory for uploads and the SQLite database.
+
+    On serverless platforms (Vercel) the project tree is read-only, so the
+    runtime data falls back to the platform temp directory when ``data/``
+    cannot be written. ``PONTO_DATA_DIR`` forces a specific location.
+    """
+    env_dir = os.getenv("PONTO_DATA_DIR")
+    if env_dir:
+        base = Path(env_dir)
+        base.mkdir(parents=True, exist_ok=True)
+        return base
+    candidate = ROOT / "data"
+    try:
+        candidate.mkdir(parents=True, exist_ok=True)
+        probe = candidate / ".write_probe"
+        probe.write_text("ok", encoding="utf-8")
+        probe.unlink(missing_ok=True)
+        return candidate
+    except OSError:
+        base = Path(os.getenv("TMPDIR") or "/tmp") / "folhaponto"
+        base.mkdir(parents=True, exist_ok=True)
+        return base
+
+
+DATA_DIR = _resolve_data_dir()
 UPLOAD_DIR = DATA_DIR / "uploads"
 DB_PATH = DATA_DIR / "digep.sqlite3"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
