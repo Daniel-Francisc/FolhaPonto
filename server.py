@@ -248,16 +248,37 @@ def init_db() -> None:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    init_db()
-    auth.configure(
-        fetch_user=_fetch_user,
-        is_revoked=_is_revoked,
-        revoke_token=_revoke_token,
-    )
+    try:
+        print("[STARTUP] Inicializando banco de dados...")
+        init_db()
+        print("[STARTUP] Banco de dados inicializado com sucesso!")
+        
+        print("[STARTUP] Configurando autenticação...")
+        auth.configure(
+            fetch_user=_fetch_user,
+            is_revoked=_is_revoked,
+            revoke_token=_revoke_token,
+        )
+        print("[STARTUP] Autenticação configurada com sucesso!")
+        print("[STARTUP] Sistema pronto para operação!")
+    except Exception as e:
+        print(f"[ERROR] Erro durante startup: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
+    
     yield
+    
+    print("[SHUTDOWN] Sistema encerrando...")
 
 
 app = FastAPI(title="Ponto Digital DIGEP", version="0.4.0", lifespan=lifespan)
+
+
+@app.get("/")
+def root() -> dict[str, str]:
+    """Rota raiz para verificar se o servidor está operacional."""
+    return {"message": "Ponto Digital DIGEP", "status": "running", "version": "0.4.0"}
 
 
 def _fetch_user(user_id: int) -> dict[str, Any] | None:
