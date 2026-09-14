@@ -1,5 +1,5 @@
 nohup: ignoring input
-INFO:     Started server process [20505]
+INFO:     Started server process [22635]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
@@ -8,9 +8,8 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 [STARTUP] Configurando autenticação...
 [STARTUP] Autenticação configurada com sucesso!
 [STARTUP] Sistema pronto para operação!
-INFO:     127.0.0.1:34284 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34288 - "GET /api/health HTTP/1.1" 200 OK
 INFO:     200.133.16.193:0 - "GET / HTTP/1.1" 200 OK
 INFO:     200.133.16.193:0 - "GET /styles.css HTTP/1.1" 404 Not Found
 INFO:     200.133.16.193:0 - "GET /app.js HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:37870 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47340 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54688 - "GET /api/dashboard HTTP/1.1" 200 OK

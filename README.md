@@ -2,52 +2,131 @@
 
 Sistema de recebimento, conferência e arquivamento de folhas de ponto da DIGEP/UnDF.
 
-## Descrição
+## 🚀 Acesso Rápido
 
-O **Ponto Digital DIGEP** é um MVP funcional de ponta a ponta para receber PDFs
-e imagens de folhas de ponto, separar cada página, extrair dados via OCR quando
-disponível, associar cada folha a um servidor pela matrícula, permitir conferência
-humana, arquivar o documento, consultar o histórico e simular o envio de e-mails
-para servidores que acumulam cargo.
+### 🌐 Localmente (Desenvolvimento)
+```
+URL: http://localhost:8000/
+Usuário: admin@undf.edu.br
+Senha: admin123
+```
 
-## Problema
+### 🌍 Vercel (Produção)
+```
+URL: https://digepundf.vercel.app/
+```
 
-A DIGEP recebe folhas de ponto em papel escaneado. O processo manual de conferência
-é demorado, sujeito a erros de transcrição e não centraliza o histórico dos
-documentos. Sem um sistema, é difícil rastrear quem enviou, quem conferiu, quando
-foi arquivado e quais folhas ainda aguardam análise.
+## ✨ Funcionalidades
 
-## Objetivos
+- ✅ **Upload de Folhas** - Receber PDF, PNG, JPG
+- ✅ **OCR Automático** - Extração de dados via Tesseract
+- ✅ **Conferência Web** - Interface para revisão humana
+- ✅ **Arquivo Digital** - Gestão de documentos com trilha de auditoria
+- ✅ **Autenticação JWT** - Segurança de acesso
+- ✅ **LGPD** - Proteção de dados pessoais (CPF)
+- ✅ **API REST** - Endpoints documentados
+- ✅ **Dashboard** - Estatísticas em tempo real
 
-- Receber folhas em PDF, PNG, JPG ou JPEG (até 20 MB).
-- Separar automaticamente cada página em documento individual.
-- Executar OCR quando Tesseract estiver disponível — sem inventar resultados.
-- Associar a folha ao servidor pela matrícula.
-- Permitir conferência humana com correção e observações.
-- Arquivar com unicidade por servidor e competência.
-- Filtrar, pesquisar e consultar o arquivo.
-- Simular a fila de envio para servidores com acúmulo de cargo.
-- Manter trilha de auditoria com identificação do usuário.
-- Proteger dados pessoais (LGPD) com mascaramento e criptografia do CPF.
+## 📋 Tecnologias
 
-## Informações acadêmicas
+- **Back-end**: FastAPI + Python 3.12
+- **Front-end**: HTML5 + CSS3 + JavaScript
+- **Banco de Dados**: SQLite
+- **Autenticação**: JWT + bcrypt
+- **Deployment**: Vercel (Serverless)
 
-- Disciplina: Estágio Empresarial I
-- Período letivo: 2026.2
-- Curso: Engenharia de Software
-- Instituição: Universidade do Distrito Federal Professor Jorge Amaury Maia Nunes – UnDF
-- Sistema: Ponto Digital DIGEP
-- Desenvolvimento do sistema: Jasmine de Sá Araujo
-- Identidade visual: Francisco Daniel Bento dos Santos e Estevão Souza Araújo
+## 📖 Documentação
 
-## Tecnologias
+- [**GUIA_COMPLETO.md**](GUIA_COMPLETO.md) - Guia de uso e configuração
+- [**VERCEL_SETUP.md**](VERCEL_SETUP.md) - Setup para Vercel
+- [**CORRECOES_APLICADAS.md**](CORRECOES_APLICADAS.md) - Histórico de correções
+- [**ANALISE_CODIGO.md**](ANALISE_CODIGO.md) - Análise técnica
 
-- Python 3.12
-- FastAPI
-- Uvicorn
-- SQLite
-- Jinja-free static frontend (HTML, CSS, JavaScript)
-- PyMuPDF (fitz) para processamento de PDF
+## 🏃 Quick Start
+
+### 1. Instalar dependências
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Iniciar servidor
+```bash
+uvicorn server:app --host 0.0.0.0 --port 8000
+```
+
+### 3. Acessar
+Abra http://localhost:8000 no navegador
+
+### 4. Login
+- Email: `admin@undf.edu.br`
+- Senha: `admin123`
+
+## 🔧 Configuração Vercel
+
+Vá para https://vercel.com/dig-ep/digepundf/settings/environment-variables
+
+Configure:
+- `SECRET_KEY` - String aleatória 64 chars
+- `JWT_ALGORITHM` - HS256
+- `JWT_EXPIRATION_MINUTES` - 480
+- `ADMIN_USERNAME` - admin@undf.edu.br
+- `ADMIN_PASSWORD` - Sua senha
+- `PONTO_DATA_DIR` - /tmp/folhaponto
+
+Clique "Redeploy"
+
+## 📊 Estrutura do Projeto
+
+```
+FolhaPonto/
+├── server.py              # API FastAPI
+├── auth.py                # Autenticação JWT
+├── models.py              # Modelos Pydantic
+├── security.py            # Segurança LGPD
+├── index.html             # Interface web
+├── app.js                 # Lógica JavaScript
+├── styles.css             # Estilos CSS
+├── FolhaPontoBack/        # Backend processing
+│   ├── processing.py      # OCR + processamento
+│   ├── ocr.class.py       # Classe OCR
+│   └── melhoriaImg.class.py # Otimização de imagem
+├── api/                   # Entry point Vercel
+└── requirements.txt       # Dependências Python
+```
+
+## 🧪 Testes
+
+```bash
+# Health check
+curl http://localhost:8000/api/health
+
+# Login
+curl -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin@undf.edu.br","password":"admin123"}'
+
+# Dashboard (com token)
+curl http://localhost:8000/api/dashboard \
+  -H "Authorization: Bearer <seu-token>"
+```
+
+## 👥 Autores
+
+Desenvolvido como projeto acadêmico:
+- **Disciplina**: Estágio Empresarial I
+- **Curso**: Engenharia de Software
+- **Instituição**: Universidade do Distrito Federal (UnDF)
+- **Período**: 2026.2
+- **Desenvolvedor**: Jasmine de Sá Araujo
+- **Design**: Francisco Daniel Bento dos Santos e Estevão Souza Araújo
+
+## 📄 Licença
+
+Projeto acadêmico - 2026
+
+---
+
+**Status**: ✅ Sistema Completo e Funcional
 - Pillow + pytesseract para OCR (opcional)
 - openpyxl para importação XLSX
 - python-jose + bcrypt para autenticação JWT
