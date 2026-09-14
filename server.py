@@ -26,6 +26,7 @@ from typing import Any
 
 from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 import auth
 import models
@@ -273,12 +274,6 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="Ponto Digital DIGEP", version="0.4.0", lifespan=lifespan)
-
-
-@app.get("/")
-def root() -> dict[str, str]:
-    """Rota raiz para verificar se o servidor está operacional."""
-    return {"message": "Ponto Digital DIGEP", "status": "running", "version": "0.4.0"}
 
 
 def _fetch_user(user_id: int) -> dict[str, Any] | None:
@@ -1139,14 +1134,10 @@ def download_timesheet(
 
 @app.get("/")
 def index() -> FileResponse:
+    """Servir página HTML principal."""
     return FileResponse(ROOT / "index.html")
 
 
-@app.get("/styles.css")
-def styles() -> FileResponse:
-    return FileResponse(ROOT / "styles.css", media_type="text/css")
-
-
-@app.get("/app.js")
-def javascript() -> FileResponse:
-    return FileResponse(ROOT / "app.js", media_type="application/javascript")
+# Mount static files for CSS, JS and other assets
+if (ROOT / "static").exists():
+    app.mount("/static", StaticFiles(directory=str(ROOT / "static")), name="static")
